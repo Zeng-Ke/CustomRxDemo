@@ -125,7 +125,12 @@ public class Observerable<T> {
 
     //=========================================================================================================
 
-
+    /**
+     * 作用于上层的OnSubcribe，可以让OnSubscribe的call方法在新线程中执行
+     *
+     * @param scheduler
+     * @return
+     */
     public Observerable<T> subscribeOn(final Scheduler scheduler) {
         return Observerable.create(new onSubcribe<T>() {
             @Override
@@ -141,6 +146,54 @@ public class Observerable<T> {
         });
     }
 
+
+    /**
+     * 作用于下层的Subscriber，需要让下层的Subscriber的事件处理方法放在新线程中执行
+     *
+     * @param scheduler
+     * @return
+     */
+    public Observerable<T> observerOn(final Scheduler scheduler) {
+        return Observerable.create(new onSubcribe<T>() {
+            @Override
+            public void call(final Subscriber<? super T> subscriber) {
+                subscriber.onStart();
+                final Scheduler.Worker worker = scheduler.createWorker();
+                Observerable.this.mOnSubcribe.call(new Subscriber<T>() {
+                    @Override
+                    public void onComplete() {
+                        worker.schedule(new Runnable() {
+                            @Override
+                            public void run() {
+                                subscriber.onComplete();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(final Throwable throwable) {
+                        worker.schedule(new Runnable() {
+                            @Override
+                            public void run() {
+                                subscriber.onError(throwable);
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onNext(final T var) {
+                        worker.schedule(new Runnable() {
+                            @Override
+                            public void run() {
+                                subscriber.onNext(var);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+    }
 
     public interface onSubcribe<T> {
         void call(Subscriber<? super T> subscriber);
