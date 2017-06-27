@@ -14,7 +14,7 @@ public class Observerable<T> {
         mOnSubcribe = onSubcribe;
     }
 
-    public Observerable<T> create(onSubcribe<T> onSubcribe) {
+    public static <T> Observerable<T> create(onSubcribe<T> onSubcribe) {
         return new Observerable<>(onSubcribe);
     }
 
