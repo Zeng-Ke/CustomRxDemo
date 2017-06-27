@@ -1,5 +1,7 @@
 package com.zk.hybrid.customrxdemo;
 
+import android.widget.ImageView;
+
 /**
  * author: ZK.
  * date:   On 2017/6/27.
@@ -36,7 +38,7 @@ public class Observerable<T> {
      * @param <R>
      * @return
      */
-    public <R> Observerable<R> map(final Transformer<? super T, ? extends R> transformer) {
+    public <R> Observerable<R> map1(final Transformer<? super T, ? extends R> transformer) {
         return create(new onSubcribe<R>() {
             @Override
             public void call(final Subscriber<? super R> subscriber) {
@@ -59,6 +61,68 @@ public class Observerable<T> {
             }
         });
     }
+
+
+    //=========================================================================================================
+
+    /**
+     * 优化后的map
+     * @param transformer
+     * @param <R>
+     * @return
+     */
+    public <R> Observerable<R> map2(Transformer<? super T, ? extends R> transformer) {
+        return create(new MapSubscribe<T, R>(this, transformer));
+    }
+
+
+    public class MapSubscribe<T, R> implements Observerable.onSubcribe {
+        final Observerable<T> source;
+        final Observerable.Transformer<? super T, ? extends R> tranFromer;
+
+        public MapSubscribe(Observerable<T> source, Transformer<? super T, ? extends R> tranFromer) {
+            this.source = source;
+            this.tranFromer = tranFromer;
+        }
+
+        @Override
+        public void call(Subscriber subscriber) {
+            source.subscribe(new MapSubScriber<R, T>(subscriber, tranFromer));
+        }
+    }
+
+
+    public class MapSubScriber<T, R> extends Subscriber<R> {
+        final Subscriber<? super T> mTSubscriber;
+        final Observerable.Transformer<? super R, ? extends T> mTransformer;
+
+        public MapSubScriber(Subscriber<? super T> tSubscriber, Transformer<? super R, ? extends T> transformer) {
+            mTSubscriber = tSubscriber;
+            mTransformer = transformer;
+        }
+
+
+        @Override
+
+        public void onComplete() {
+            mTSubscriber.onComplete();
+        }
+
+        @Override
+        public void onError(Throwable throwable) {
+            mTSubscriber.onError(throwable);
+        }
+
+        @Override
+        public void onNext(R var) {
+            mTSubscriber.onNext(mTransformer.call(var));
+        }
+
+
+    }
+
+
+    //=========================================================================================================
 
 
     public interface onSubcribe<T> {
