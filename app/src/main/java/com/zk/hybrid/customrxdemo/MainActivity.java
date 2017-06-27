@@ -67,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+        //-------------------改进后map------------------------------------------
         Observerable.create(new Observerable.onSubcribe<Integer>() {
             @Override
             public void call(Subscriber<? super Integer> subscriber) {
@@ -97,5 +99,32 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        //================subscribeOn=================================
+        Observerable.create(new Observerable.onSubcribe<Integer>() {
+            @Override
+            public void call(Subscriber<? super Integer> subscriber) {
+                Log.d("====subscribeOn Thread=", Thread.currentThread().getName());
+            }
+        }).subscribeOn(Schedulers.io())
+           .subscribe(new Subscriber<Integer>() {
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+
+            }
+
+            @Override
+            public void onNext(Integer var) {
+
+            }
+        });
+
+
     }
+
+
 }

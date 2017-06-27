@@ -67,6 +67,7 @@ public class Observerable<T> {
 
     /**
      * 优化后的map
+     *
      * @param transformer
      * @param <R>
      * @return
@@ -123,6 +124,22 @@ public class Observerable<T> {
 
 
     //=========================================================================================================
+
+
+    public Observerable<T> subscribeOn(final Scheduler scheduler) {
+        return Observerable.create(new onSubcribe<T>() {
+            @Override
+            public void call(final Subscriber<? super T> subscriber) {
+                subscriber.onStart();
+                scheduler.createWorker().schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        Observerable.this.mOnSubcribe.call(subscriber);
+                    }
+                });
+            }
+        });
+    }
 
 
     public interface onSubcribe<T> {
