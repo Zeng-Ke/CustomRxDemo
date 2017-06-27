@@ -37,5 +37,36 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //-------------------map------------------------------------------
+        Observerable.create(new Observerable.onSubcribe<Integer>() {
+            @Override
+            public void call(Subscriber<? super Integer> subscriber) {
+                for (int i = 0; i < 10; i++) {
+                    subscriber.onNext(i);
+                }
+            }
+        }).map(new Observerable.Transformer<Integer, String>() {
+            @Override
+            public String call(Integer from) {
+                return "map :  " + from;
+            }
+        }).subscribe(new Subscriber<String>() {
+            @Override
+            public void onComplete() {
+
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+
+            }
+
+            @Override
+            public void onNext(String var) {
+                Log.d("===================", var.toString());
+            }
+        });
+
+
     }
 }
